@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+kaggle
+tensorflow<2.15
