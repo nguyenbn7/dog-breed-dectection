@@ -8,11 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from numpy import argmax
 
-from tensorflow import keras, get_logger
+from tensorflow import keras, get_logger, nn, expand_dims
 from keras.models import load_model
 from keras.utils import get_file, load_img, img_to_array
-from tensorflow import expand_dims
-from tensorflow import nn
 
 get_logger().setLevel(logging.ERROR)
 
@@ -30,9 +28,17 @@ app.add_middleware(
     allow_headers=headers,
 )
 
-
+IMG_SIZE = 224
 model_name = "custom-mobilenetv2-Adam.h5"
 model = load_model(path.join(".", "model", model_name))
+
+
+def process_image(image_link: str):
+    image_path = get_file(origin=image_link)
+
+    image = load_img(image_path, target_size=(IMG_SIZE, IMG_SIZE))
+    image_array = img_to_array(image)
+    return expand_dims(image_array, 0) / 255.
 
 
 @app.get("/")
@@ -45,14 +51,9 @@ async def predict_dog_image(image_link=""):
     if not image_link:
         return {"Message": "No image link provided"}
 
-    image_path = get_file(origin=image_link)
+    image = process_image(image_link)
 
-    image = load_img(image_path, target_size=(224, 224))
-
-    img_array = img_to_array(image)
-    img_array = expand_dims(img_array, 0)
-
-    pred = model.predict(img_array)
+    pred = model.predict(image)
     score = nn.softmax(pred[0])
 
     max_idx = argmax(score)
@@ -61,5 +62,5 @@ async def predict_dog_image(image_link=""):
 
     return {
         "model-prediction": class_prediction,
-        "model-prediction-confidence-score": model_score,
+        "model-prediction-confidence-score": f'{model_score}%',
     }
