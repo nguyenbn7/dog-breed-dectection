@@ -7,7 +7,8 @@ RUN python -m pip install kaggle --upgrade
 WORKDIR /tmp_app
 COPY . /tmp_app
 
-RUN --mount=type=secret,id=kaggle_env,dst=/etc/secrets/.kaggle export $(cat /etc/secrets/.kaggle)
+RUN --mount=type=secret,id=kaggle_username,dst=/etc/secrets/kaggle_username KAGGLE_USERNAME=$(cat /etc/secrets/kaggle_username)
+RUN --mount=type=secret,id=kaggle_key,dst=/etc/secrets/kaggle_key KAGGLE_KEY=$(cat /etc/secrets/kaggle_key)
 RUN kaggle kernels output nguyenbnguyen/dog-breed-classification-mobilenet -p ./model
 RUN rm -f ./*.log ./*.csv
 
