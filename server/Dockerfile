@@ -8,8 +8,7 @@ WORKDIR /tmp_app
 COPY . /tmp_app
 
 RUN mkdir $HOME/.kaggle
-RUN ls $HOME
-RUN --mount=type=secret,id=kaggle_json,dst=/etc/secrets/kaggle.json cat /etc/secrets/kaggle.json
+RUN --mount=type=secret,id=kaggle_json,dst=/etc/secrets/kaggle.json cat /etc/secrets/kaggle.json > $HOME/.kaggle/kaggle.json
 
 RUN kaggle kernels output nguyenbnguyen/dog-breed-classification-mobilenet -p ./model
 RUN rm -f ./*.log ./*.csv
