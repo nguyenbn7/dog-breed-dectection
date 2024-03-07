@@ -1,5 +1,4 @@
 from io import BytesIO
-import json
 from predicted_classes import dog_breeds
 
 from os import path
