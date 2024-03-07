@@ -9,10 +9,12 @@
 	 * @type {HTMLImageElement}
 	 */
 	let uploadImage;
+	/**
+	 * @type {string | undefined}
+	 */
+	let imageUrl;
+	let errorMessage = '';
 
-	function openFile() {
-		inputFile.click();
-	}
 	/**
 	 * @param {Event & { currentTarget: EventTarget & HTMLInputElement }} $event
 	 */
@@ -32,6 +34,30 @@
 		};
 
 		reader.readAsDataURL(selectedFile);
+	}
+
+	/**
+	 * @param {string} url
+	 */
+	function isImageURL(url) {
+		return url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+	}
+
+	/**
+	 * @param {Event & { currentTarget: EventTarget & HTMLInputElement; }} $event
+	 */
+	function previewImageUrl($event) {
+		if (!isImageURL($event.currentTarget.value)) {
+			errorMessage = 'Invalid Url';
+			return;
+		}
+		imageUrl = $event.currentTarget.value;
+	}
+
+	$: if (useURL) {
+		uploadImage.src = '';
+	} else {
+		imageUrl = '';
 	}
 </script>
 
@@ -77,39 +103,39 @@
 				</li>
 			</ul>
 			{#if useURL}
-				<div class="mt-2 input-group">
+				<div class="mt-2 mb-4 input-group">
 					<input
 						type="text"
 						name="Image URL"
 						class="form-control me-1"
 						placeholder="https://example.com/dog_image.(jpg | png)"
+						on:input={previewImageUrl}
 					/>
-					<button class="btn btn-primary px-4 p-2">Detect</button>
+					<button class="btn btn-primary px-4 p-2" disabled={!imageUrl}>Detect</button>
 				</div>
-				<div
-					class="border border-white border-opacity-50 rounded border-2 w-100 h-75 position-relative mt-1"
-					style="--bs-border-style: dashed;"
-				>
-					<!-- svelte-ignore a11y-missing-attribute -->
-					<img class="img-fluid" />
-					<p class="position-absolute top-50 start-50 translate-middle">Preview your image</p>
+				<div class="w-100 h-75 position-relative mt-2">
+					{#if imageUrl}
+						<!-- svelte-ignore a11y-missing-attribute -->
+						<img class="img-fluid" src={imageUrl} />
+					{:else}
+						<div
+							class="border border-white border-opacity-50 rounded border-2 h-100"
+							style="--bs-border-style: dashed;"
+						></div>
+						<p class="position-absolute top-50 start-50 translate-middle">
+							{#if errorMessage}
+								{errorMessage}
+							{:else}
+								Preview your image
+							{/if}
+						</p>
+					{/if}
 				</div>
 			{:else}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<div
-					class="border border-white w-100 h-75 border-opacity-50 rounded border-2 position-relative"
-					style="--bs-border-style: dashed; cursor: pointer;"
-					on:click={openFile}
-				>
-					<!-- svelte-ignore a11y-missing-attribute -->
-					<img class="img-fluid h-100" bind:this={uploadImage} style="max-width: 100%;"/>
-					{#if !uploadImage?.src}
-						<p class="position-absolute top-50 start-50 translate-middle">
-							<i class="fa-solid fa-upload me-2"></i> Upload your image
-						</p>
-					{/if}
+				<div class="w-100 h-75 position-relative mt-2">
 					<input
 						type="file"
 						name="file"
@@ -117,6 +143,26 @@
 						style="display: none;"
 						bind:this={inputFile}
 						on:change={onFileSelected}
+					/>
+					{#if !uploadImage?.src}
+						<div
+							class="border border-white w-100 h-100 border-opacity-50 rounded border-2"
+							style="--bs-border-style: dashed; cursor: pointer;"
+							on:click={() => inputFile.click()}
+						></div>
+						<p class="position-absolute top-50 start-50 translate-middle">
+							<i class="fa-solid fa-upload me-2"></i> Upload your image
+						</p>
+					{:else}
+						<button class="btn btn-primary p-2 w-100 mb-4">Detect</button>
+					{/if}
+					<!-- svelte-ignore a11y-missing-attribute -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+					<img
+						class="img-fluid"
+						bind:this={uploadImage}
+						on:click={() => inputFile.click()}
+						style="cursor: pointer;"
 					/>
 				</div>
 			{/if}
