@@ -2,7 +2,8 @@ name: Deploy Server
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - server
     
 jobs:
   Trigger-Render-Deployment:
