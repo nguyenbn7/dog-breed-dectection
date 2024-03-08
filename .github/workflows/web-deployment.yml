@@ -2,7 +2,7 @@ name: Deploy Web
 on:
   push:
     tags:
-      - web
+      - web*
 jobs:
   Trigger-Vercel-Deployment:
     runs-on: ubuntu-latest
