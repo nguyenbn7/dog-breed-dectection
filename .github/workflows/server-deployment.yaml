@@ -3,7 +3,7 @@ name: Deploy Server
 on:
   push:
     tags:
-      - server/*
+      - server*
     
 jobs:
   Trigger-Render-Deployment:
