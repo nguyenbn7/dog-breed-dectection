@@ -68,12 +68,7 @@
 		}
 
 		const imageUrl = $event.currentTarget.value;
-		const response = await fetch(imageUrl, {
-			mode: 'no-cors',
-			headers: {
-				'Access-Control-Allow-Origin': '*'
-			}
-		});
+		const response = await fetch(imageUrl);
 		const imageContent = await response.blob();
 
 		const imageName = imageUrl.split('/').pop() ?? '';
