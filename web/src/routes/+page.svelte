@@ -15,13 +15,13 @@
 	 * @type {File}
 	 */
 	let dogImage;
-
 	let bestMatchMsg = '';
 	let maxScoreMsg = '';
 	/**
 	 * @type { {[x: string]: number} }
 	 */
 	let predictions_scores;
+	let isPredicting = false;
 
 	/**
 	 * @param {string} url
@@ -68,7 +68,12 @@
 		}
 
 		const imageUrl = $event.currentTarget.value;
-		const response = await fetch(imageUrl);
+		const response = await fetch(imageUrl, {
+			mode: 'no-cors',
+			headers: {
+				'Access-Control-Allow-Origin': '*'
+			}
+		});
 		const imageContent = await response.blob();
 
 		const imageName = imageUrl.split('/').pop() ?? '';
@@ -78,38 +83,45 @@
 	}
 
 	async function predict() {
-		if (!dogImage) return;
+		try {
+			if (!dogImage) return;
 
-		const imageData = new FormData();
-		imageData.append('image_file', dogImage);
+			const imageData = new FormData();
+			imageData.append('image_file', dogImage);
 
-		const response = await fetch(`${PUBLIC_BASE_API}/predict`, {
-			method: 'POST',
-			body: imageData
-		});
+			isPredicting = true;
+			bestMatchMsg = '';
+			maxScoreMsg = '';
+			predictions_scores = {};
 
-		const data = await response.json();
+			const response = await fetch(`${PUBLIC_BASE_API}/predict`, {
+				method: 'POST',
+				body: imageData
+			});
 
-		bestMatchMsg = data['model-prediction'];
-		maxScoreMsg = `${data['model-prediction-confidence-score-percentage']}%`;
-		predictions_scores = Object.assign(data['model-top-5-predictions-scores-percentage'], {});
+			const data = await response.json();
 
-		console.log(data);
+			bestMatchMsg = data['model-prediction'];
+			maxScoreMsg = `${data['model-prediction-confidence-score-percentage']}%`;
+			predictions_scores = Object.assign(data['model-top-5-predictions-scores-percentage'], {});
+		} catch (error) {
+			console.log(error);
+			// @ts-ignore
+			bestMatchMsg = error;
+		} finally {
+			isPredicting = false;
+		}
 	}
 </script>
 
-<div class="cover-container d-flex w-100 p-3 flex-column mt-4">
-	<div class="">
-		<p class="lead">
-			<span class="text-warning">
-				<span class="fw-bold">WARNING: </span>
-				<span class="fst-italic">
-					If you upload an image not a dog, machine can not detect it correctly
-				</span>
-			</span>
-		</p>
-		<h1>Which breed is that dog</h1>
-	</div>
+<div class="cover-container d-flex w-100 px-3 pb-4 flex-column mx-auto flex-grow-1">
+	<h1 class="mb-3">Which breed is that dog</h1>
+	<p class="lead">
+		<span class="text-info fw-bold">NOTE: </span>
+		<span class="fst-italic">
+			If you upload an image not a dog, machine can not detect it correctly
+		</span>
+	</p>
 
 	<main class="w-100 h-100 mt-3 row">
 		<div class="col-8">
@@ -137,7 +149,7 @@
 				{/each}
 			</ul>
 			{#if tabIndex === 1}
-				<div class="mt-2 mb-4 input-group">
+				<div class="mt-2 mb-1 input-group">
 					<input
 						type="text"
 						name="Image URL"
@@ -147,9 +159,14 @@
 					/>
 					<button
 						class="btn btn-primary px-4 p-2"
-						disabled={!previewImageNode?.src}
-						on:click={predict}>Detect</button
+						disabled={!previewImageNode?.src || isPredicting}
+						on:click={predict}
 					>
+						Detect
+						{#if isPredicting}
+							<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+						{/if}
+					</button>
 				</div>
 				<div class="w-100 h-75 position-relative mt-2">
 					{#if !previewImageNode?.src}
@@ -191,7 +208,16 @@
 							<i class="fa-solid fa-upload me-2"></i> Upload your image
 						</p>
 					{:else}
-						<button class="btn btn-primary p-2 w-100 mb-4" on:click={predict}>Detect</button>
+						<button
+							class="btn btn-primary p-2 w-100 mb-4"
+							on:click={predict}
+							disabled={isPredicting}
+						>
+							Detect
+							{#if isPredicting}
+								<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+							{/if}
+						</button>
 					{/if}
 					<!-- svelte-ignore a11y-missing-attribute -->
 					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
